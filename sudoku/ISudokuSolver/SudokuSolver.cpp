@@ -8,6 +8,7 @@ const int c_cols_of_blocks = 3;
 const int c_max_field_value = 9;
 const int c_min_field_value = 1;
 const int c_unique = 1;
+const int c_reset_value = 0;
 
 SudokuSolver::SudokuSolver(int(&sudoku_matrix)[c_number_of_rows][c_number_of_cols])
 {
@@ -19,10 +20,9 @@ SudokuSolver::SudokuSolver(int(&sudoku_matrix)[c_number_of_rows][c_number_of_col
 bool SudokuSolver::Solve() 
 {
 	SolveStraightforward();
-
 	if (!IsSolved())
 	{
-//		SolveBacktrack();
+		SolveBacktrack();
 	}
 	return IsSolved();
 }
@@ -36,6 +36,30 @@ void SudokuSolver::LoadField(int(&sudoku_matrix)[c_number_of_rows][c_number_of_c
 			m_matrix[i][j] = sudoku_matrix[i][j];
 		}
 	}
+}
+
+void SudokuSolver::SaveMatrix(int(&sudoku_matrix)[c_number_of_rows][c_number_of_cols])
+{
+	for (int i = 0; i < c_number_of_rows; i++)
+	{
+		for (int j = 0; j < c_number_of_cols; j++)
+		{
+			sudoku_matrix[i][j] = m_matrix[i][j];
+		}
+	}
+}
+
+void SudokuSolver::ResetMatrix(int(&sudoku_matrix)[c_number_of_rows][c_number_of_cols])
+{
+	for (int i = 0; i < c_number_of_rows; i++)
+	{
+		for (int j = 0; j < c_number_of_cols; j++)
+		{
+			m_matrix[i][j] = sudoku_matrix[i][j];
+		}
+	}
+	FillCheckArrays();
+	InitCheckArrays();
 }
 
 void SudokuSolver::FillCheckArrays()
@@ -120,6 +144,18 @@ bool SudokuSolver::IsColSingular(int col, int value)
 	return count_of_fit_field == c_unique;
 }
 
+bool SudokuSolver::IsOnlyFitValue(int row, int col, int value)
+{
+	for (int possible_value = c_min_field_value; possible_value <= c_max_field_value; possible_value++)
+	{
+		if (possible_value != value && CheckFieldValue(row, col, possible_value))
+		{
+			return false;
+		}
+	}
+	return CheckFieldValue(row, col, value);
+}
+
 bool SudokuSolver::IsValueAdequate(int row, int col, int value)
 {
 	return CheckFieldValue(row, col, value) && IsSingular(row, col, value);
@@ -169,7 +205,9 @@ bool SudokuSolver::CheckOutFields()
 				
 				for (int value = c_min_field_value ; value <= c_max_field_value && !changes; value++)
 				{
-					if (IsValueAdequate(i, j, value))
+					bool temp = IsOnlyFitValue(i, j, value);
+					bool temp1 = IsValueAdequate(i, j, value);
+					if (temp1 || temp)
 					{
 						AssignFieldValue(i, j, value);
 						changes = true;
@@ -191,15 +229,45 @@ bool SudokuSolver::SolveStraightforward()
 	return IsSolved();
 }
 
+bool SudokuSolver::SolveBacktrack()
+{
+	for (int i= 0; i < c_number_of_rows; i++)
+	{
+		for (int j = 0; j < c_number_of_cols; j++)
+		{
+			if (m_matrix[i][j] == 0)
+			{
+				for (int value = c_min_field_value; value <= c_max_field_value; value++)
+				{
+					bool temp = CheckFieldValue(i, j, value);
+					if (temp)
+					{
+						int saved_matrix[c_number_of_rows][c_number_of_cols];
+						SaveMatrix(saved_matrix);
+						AssignFieldValue(i, j, value);
+						if (Solve())
+						{
+							return true;
+						}
+						else
+						{
+							ResetMatrix(saved_matrix);
+						}
+					}
+				}
+			}
+		}
+	}
+	return false;
+}
+
 bool SudokuSolver::IsSolved()
 {
-	bool solved = false;
 	for (int i = 0; i < c_number_of_rows; i++)
 	{
 		for (int j = 0; j < c_number_of_cols; j++)
 		{
-			solved = m_matrix[i][j] != 0;
-			if (!solved)
+			if (m_matrix[i][j] == 0)
 			{
 				return false;
 			}

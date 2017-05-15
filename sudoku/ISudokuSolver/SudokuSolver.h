@@ -16,6 +16,9 @@ public:
 private:
 	void LoadField(int(&sudoku_matrix)[c_number_of_rows][c_number_of_cols]);
 
+	void SaveMatrix(int(&sudoku_matrix)[c_number_of_rows][c_number_of_cols]);
+	void ResetMatrix(int(&sudoku_matrix)[c_number_of_rows][c_number_of_cols]);
+
 	void FillCheckArrays();
 
 	bool CheckFieldValue(int row, int col, int value);
@@ -27,6 +30,7 @@ private:
 	bool IsBlockSingular(int block, int value);
 	bool IsRowSingular(int row, int value);
 	bool IsColSingular(int col, int value);
+	bool IsOnlyFitValue(int row, int col, int value);
 
 	bool IsValueAdequate(int row, int col, int value);
 
