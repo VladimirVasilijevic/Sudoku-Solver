@@ -1,4 +1,5 @@
 #include <iostream>
+#include <memory>
 #include "ISudokuSolver.h"
 #include "SudokuSolver.h"
 
@@ -28,9 +29,22 @@ void WriteSudoku(int matrix[N][N])
 	cout << "+-------+-------+-------+" << endl;
 }
 
+void CopyMatrix(int(&sudoku_matrix)[c_number_of_rows][c_number_of_cols], Matrix & destination)
+{
+	for (int i = 0; i < c_number_of_rows; i++)
+	{
+		for (int j = 0; j < c_number_of_cols; j++)
+		{
+			destination[i][j] = sudoku_matrix[i][j];
+		}
+	}
+}
+
 int main()
 {
-	int sudoku_matrix[N][N] = {	{ 8, 0, 0, 0, 0, 0, 0, 0, 5 },
+	Matrix sudoku_matrix;
+	sudoku_matrix.resize(c_number_of_rows, vector<int>(c_number_of_cols));
+	int matrix[N][N] = {	{ 8, 0, 0, 0, 0, 0, 0, 0, 5 },
 								{ 0, 2, 0, 9, 0, 0, 0, 0, 8 },
 								{ 0, 0, 0, 8, 6, 7, 0, 1, 0 },
 								{ 0, 1, 0, 7, 0, 0, 3, 0, 0 },
@@ -41,10 +55,11 @@ int main()
 								{ 1, 0, 0, 0, 7, 0, 0, 0, 6 } 
 							  };
 
-	WriteSudoku(sudoku_matrix);
+	WriteSudoku(matrix);
 	cout << "Sudoku" << endl;
-
-	ISudokuSolver* sudoku = new SudokuSolver(sudoku_matrix);
+	CopyMatrix(matrix, sudoku_matrix);
+	std::unique_ptr<ISudokuSolver> sudoku (new SudokuSolver(sudoku_matrix));
+	//sudoku->LoadMatrix(sudoku_matrix);
 	bool Is_solved = sudoku->Solve();
 
 	if (Is_solved)
@@ -55,6 +70,4 @@ int main()
 	{
 		cout << "Sudoku nije resen!" << endl;
 	}
-
-	delete sudoku;
 }

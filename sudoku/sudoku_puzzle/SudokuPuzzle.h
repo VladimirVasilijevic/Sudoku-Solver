@@ -1,5 +1,6 @@
 #pragma once
 #include <string>
+#include <memory>
 
 class DigitRecognition;
 class ISudokuSolver;
@@ -18,7 +19,7 @@ public:
 private:
 
 
-	DigitRecognition* m_digit_teller;
-	ISudokuSolver* m_solver;
-	SquaresDetection* m_sudoku;
+	std::unique_ptr<DigitRecognition> m_digit_teller;
+	std::unique_ptr<ISudokuSolver> m_solver;
+	std::unique_ptr<SquaresDetection> m_squaresDetector;
 };

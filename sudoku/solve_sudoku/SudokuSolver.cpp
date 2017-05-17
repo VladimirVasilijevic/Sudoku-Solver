@@ -8,13 +8,20 @@ const int c_cols_of_blocks = 3;
 const int c_max_field_value = 9;
 const int c_min_field_value = 1;
 const int c_unique = 1;
-const int c_reset_value = 0;
+const int c_reset_value = 0; 
+const int c_isEmpty = 0; 
+const int c_isSingular = 1;
 
-SudokuSolver::SudokuSolver(int(&sudoku_matrix)[c_number_of_rows][c_number_of_cols])
+SudokuSolver::SudokuSolver()
+{
+	m_matrix.resize(c_number_of_rows, vector<int>(c_number_of_cols));
+}
+
+SudokuSolver::SudokuSolver(const Matrix& sudoku_matrix)
 {
 	m_matrix.resize(c_number_of_rows, vector<int>(c_number_of_cols));
 	FillCheckArrays();
-	LoadField(sudoku_matrix);
+	CopyMatrix(sudoku_matrix, m_matrix);
 	InitCheckArrays();
 }
 
@@ -28,37 +35,25 @@ bool SudokuSolver::Solve()
 	return IsSolved();
 }
 
-void SudokuSolver::LoadField(int(&sudoku_matrix)[c_number_of_rows][c_number_of_cols])
+void SudokuSolver::CopyMatrix(const Matrix & source, Matrix & destination)
 {
 	for (int i = 0; i < c_number_of_rows; i++)
 	{
 		for (int j = 0; j < c_number_of_cols; j++)
 		{
-			m_matrix[i][j] = sudoku_matrix[i][j];
+			destination[i][j] = source[i][j];
 		}
 	}
 }
 
-void SudokuSolver::SaveMatrix(Matrix &sudoku_matrix)
+void SudokuSolver::LoadMatrix(const Matrix & source)
 {
-	for (int i = 0; i < c_number_of_rows; i++)
-	{
-		for (int j = 0; j < c_number_of_cols; j++)
-		{
-			sudoku_matrix[i][j] = m_matrix[i][j];
-		}
-	}
+	ResetMatrix(source);
 }
 
-void SudokuSolver::ResetMatrix(Matrix sudoku_matrix)
+void SudokuSolver::ResetMatrix(const Matrix&  sudoku_matrix)
 {
-	for (int i = 0; i < c_number_of_rows; i++)
-	{
-		for (int j = 0; j < c_number_of_cols; j++)
-		{
-			m_matrix[i][j] = sudoku_matrix[i][j];
-		}
-	}
+	CopyMatrix(sudoku_matrix, m_matrix);
 	FillCheckArrays();
 	InitCheckArrays();
 }
@@ -98,7 +93,7 @@ SudokuField SudokuSolver::FindEmptyFieldAndGuessValue(SudokuField startField, in
 				int value = (i == startField.Row()) ? startValue : c_min_field_value;
 				for (; value <= c_max_field_value; value++)
 				{
-					if (CheckFieldValue(i, j, value))
+					if (IsCompatible(i, j, value))
 					{
 						field.SetField(i, j, value);
 						return field;
@@ -112,18 +107,12 @@ SudokuField SudokuSolver::FindEmptyFieldAndGuessValue(SudokuField startField, in
 
 void SudokuSolver::FillCheckArrays()
 {
-	for (int i = 0; i < c_number_of_rows; i++)
-	{
-		for (int j = 0; j < c_number_of_cols; j++)
-		{
-			m_rows[i][j] = false;
-			m_cols[i][j] = false;
-			m_blocks[i][j] = false;
-		}
-	}
+	memset(m_rows, false, c_number_of_rows * c_number_of_rows);
+	memset(m_cols, false, c_number_of_rows * c_number_of_rows);
+	memset(m_blocks, false, c_number_of_rows * c_number_of_rows);
 }
 
-bool SudokuSolver::CheckFieldValue(int row, int col, int value)
+bool SudokuSolver::IsCompatible(int row, int col, int value)
 {
 	return !CheckRow(row, value) && !CheckCol(col, value) && !CheckBlock(row, col, value);
 }
@@ -145,10 +134,12 @@ bool SudokuSolver::CheckBlock(int row, int col, int value)
 
 bool SudokuSolver::IsSingular(int row, int col, int value)
 {
-	return IsBlockSingular(Block(row, col), value) || IsRowSingular(row, value) || IsColSingular(col, value);
+	return (CountCompatibleFieldsInBlock(Block(row, col), value) == c_isSingular) 
+		|| (CountCompatibleFieldsInRow(row, value) == c_isSingular) 
+		|| (CountCompatibleFieldsInCol(col, value) == c_isSingular);
 }
 
-bool SudokuSolver::IsBlockSingular(int block, int value)
+int SudokuSolver::CountCompatibleFieldsInBlock(int block, int value)
 {
 	int count_of_fit_field = 0;
 	int block_row = block / c_rows_of_blocks;
@@ -157,56 +148,56 @@ bool SudokuSolver::IsBlockSingular(int block, int value)
 	{
 		for (int col = block_col * c_cols_of_blocks; col < (block_col + 1) * c_cols_of_blocks; col++)
 		{
-			if (m_matrix[row][col] == 0 && CheckFieldValue(row, col, value))
+			if (m_matrix[row][col] == c_isEmpty && IsCompatible(row, col, value))
 			{
 				count_of_fit_field++;
 			}
 		}
 	}
-	return count_of_fit_field == c_unique;
+	return count_of_fit_field;
 }
 
-bool SudokuSolver::IsRowSingular(int row, int value)
+int SudokuSolver::CountCompatibleFieldsInRow(int row, int value)
 {
 	int count_of_fit_field = 0;
 	for (int i = 0; i < c_number_of_cols; i++)
 	{
-		if (m_matrix[row][i] == 0 && CheckFieldValue(row, i, value))
+		if (m_matrix[row][i] == 0 && IsCompatible(row, i, value))
 		{
 			count_of_fit_field++;
 		}
 	}
-	return count_of_fit_field == c_unique;
+	return count_of_fit_field;
 }
 
-bool SudokuSolver::IsColSingular(int col, int value)
+int SudokuSolver::CountCompatibleFieldsInCol(int col, int value)
 {
 	int count_of_fit_field = 0;
 	for (int i = 0; i < c_number_of_rows; i++)
 	{
-		if (m_matrix[i][col] == 0 && CheckFieldValue(i, col, value))
+		if (m_matrix[i][col] == 0 && IsCompatible(i, col, value))
 		{
 			count_of_fit_field++;
 		}
 	}
-	return count_of_fit_field == c_unique;
+	return count_of_fit_field;
 }
 
 bool SudokuSolver::IsOnlyFitValue(int row, int col, int value)
 {
 	for (int possible_value = c_min_field_value; possible_value <= c_max_field_value; possible_value++)
 	{
-		if (possible_value != value && CheckFieldValue(row, col, possible_value))
+		if (possible_value != value && IsCompatible(row, col, possible_value))
 		{
 			return false;
 		}
 	}
-	return CheckFieldValue(row, col, value);
+	return IsCompatible(row, col, value);
 }
 
-bool SudokuSolver::IsValueAdequate(int row, int col, int value)
+bool SudokuSolver::IsUniqueSolution(int row, int col, int value)
 {
-	return CheckFieldValue(row, col, value) && IsSingular(row, col, value);
+	return IsCompatible(row, col, value) && IsSingular(row, col, value);
 }
 
 void SudokuSolver::AssignCheckValues(int row, int col, int value)
@@ -253,7 +244,7 @@ bool SudokuSolver::CheckOutFields()
 				
 				for (int value = c_min_field_value ; value <= c_max_field_value && !changes; value++)
 				{
-					if (IsValueAdequate(i, j, value) || IsOnlyFitValue(i, j, value))
+					if (IsUniqueSolution(i, j, value) || IsOnlyFitValue(i, j, value))
 					{
 						AssignFieldValue(i, j, value);
 						changes = true;
@@ -303,38 +294,6 @@ bool SudokuSolver::SolveBacktrack()
 
 	return false;
 }
-
-//bool SudokuSolver::SolveBacktrack()
-//{
-//	for (int i= 0; i < c_number_of_rows; i++)
-//	{
-//		for (int j = 0; j < c_number_of_cols; j++)
-//		{
-//			if (m_matrix[i][j] == 0)
-//			{
-//				for (int value = c_min_field_value; value <= c_max_field_value; value++)
-//				{
-//					if (CheckFieldValue(i, j, value))
-//					{
-//						Matrix saved_matrix;
-//						saved_matrix.resize(c_number_of_rows, vector<int>(c_number_of_cols));
-//						SaveMatrix(saved_matrix);
-//						AssignFieldValue(i, j, value);
-//						if (Solve())
-//						{
-//							return true;
-//						}
-//						else
-//						{
-//							ResetMatrix(saved_matrix);
-//						}
-//					}
-//				}
-//			}
-//		}
-//	}
-//	return false;
-//}
 
 bool SudokuSolver::IsSolved()
 {
