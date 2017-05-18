@@ -58,8 +58,7 @@ int main()
 	WriteSudoku(matrix);
 	cout << "Sudoku" << endl;
 	CopyMatrix(matrix, sudoku_matrix);
-	std::unique_ptr<ISudokuSolver> sudoku (new SudokuSolver(sudoku_matrix));
-	//sudoku->LoadMatrix(sudoku_matrix);
+	std::unique_ptr<ISudokuSolver> sudoku (make_unique<SudokuSolver>(sudoku_matrix));
 	bool Is_solved = sudoku->Solve();
 
 	if (Is_solved)

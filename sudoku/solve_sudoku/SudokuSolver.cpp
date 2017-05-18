@@ -248,7 +248,7 @@ bool SudokuSolver::CheckOutFields()
 	{
 		for (int j = 0; j < c_number_of_cols; j++)
 		{
-			if (m_matrix[i][j] == 0)
+			if (m_matrix[i][j] == c_isEmpty)
 			{
 				
 				for (int value = c_min_field_value ; value <= c_max_field_value && !changes; value++)
@@ -312,7 +312,7 @@ bool SudokuSolver::IsSolved()
 	{
 		for (int j = 0; j < c_number_of_cols; j++)
 		{
-			if (m_matrix[i][j] == 0)
+			if (m_matrix[i][j] == c_isEmpty)
 			{
 				return false;
 			}
