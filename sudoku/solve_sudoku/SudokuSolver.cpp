@@ -12,6 +12,56 @@ const int c_reset_value = 0;
 const int c_isEmpty = 0; 
 const int c_isSingular = 1;
 
+SudokuField StartWithEmptyField()
+{
+	SudokuField field;
+	field.m_row = 0;
+	field.m_col = 0;
+	field.m_value = 0;
+	return field;
+}
+
+void CopyMatrix(const Matrix & source, Matrix & destination)
+{
+	for (int i = 0; i < c_number_of_rows; i++)
+	{
+		for (int j = 0; j < c_number_of_cols; j++)
+		{
+			destination[i][j] = source[i][j];
+		}
+	}
+}
+
+void SaveMatrix(const Matrix & source, std::vector<Matrix> & destination)
+{
+	destination.emplace_back(source);
+}
+
+
+Matrix PopMatrix(std::vector<Matrix> & destination)
+{
+	Matrix pop_matrix = destination.back();
+	destination.pop_back();
+	return pop_matrix;
+}
+
+void SaveField(const SudokuField& field, std::vector<SudokuField>& saved_fields)
+{
+	saved_fields.emplace_back(field);
+}
+
+SudokuField PopField(std::vector<SudokuField>& saved_fields)
+{
+	SudokuField field = saved_fields.back();
+	saved_fields.pop_back();
+	return field;
+}
+
+bool IsFieldEmpty(SudokuField field)
+{
+	return field.m_value == c_isEmpty;
+}
+
 SudokuSolver::SudokuSolver()
 {
 	m_matrix.resize(c_number_of_rows, vector<int>(c_number_of_cols));
@@ -20,9 +70,7 @@ SudokuSolver::SudokuSolver()
 SudokuSolver::SudokuSolver(const Matrix& sudoku_matrix)
 {
 	m_matrix.resize(c_number_of_rows, vector<int>(c_number_of_cols));
-	FillCheckArrays();
 	CopyMatrix(sudoku_matrix, m_matrix);
-	InitCheckArrays();
 }
 
 bool SudokuSolver::Solve() 
@@ -35,67 +83,30 @@ bool SudokuSolver::Solve()
 	return IsSolved();
 }
 
-void SudokuSolver::CopyMatrix(const Matrix & source, Matrix & destination)
-{
-	for (int i = 0; i < c_number_of_rows; i++)
-	{
-		for (int j = 0; j < c_number_of_cols; j++)
-		{
-			destination[i][j] = source[i][j];
-		}
-	}
-}
-
 void SudokuSolver::LoadMatrix(const Matrix & source)
 {
-	ResetMatrix(source);
-}
-
-void SudokuSolver::ResetMatrix(const Matrix&  sudoku_matrix)
-{
-	CopyMatrix(sudoku_matrix, m_matrix);
-	FillCheckArrays();
-	InitCheckArrays();
-}
-
-void SudokuSolver::SaveMatrix()
-{
-	m_saved_matrixs.push_back(m_matrix);
-}
-
-void SudokuSolver::ResetMatrix()
-{
-	ResetMatrix(m_saved_matrixs.back());
-	m_saved_matrixs.pop_back();
-}
-
-void SudokuSolver::SaveField(SudokuField field)
-{
-	m_saved_fields.push_back(field);
-}
-
-void SudokuSolver::ResetField(SudokuField &field)
-{
-	field = m_saved_fields.back();
-	m_saved_fields.pop_back();
+	CopyMatrix(source, m_matrix);
 }
 
 SudokuField SudokuSolver::FindEmptyFieldAndGuessValue(SudokuField startField, int startValue)
 {
-	SudokuField field;
-	for (int i = startField.Row(); i < c_number_of_rows; i++)
+	SudokuField field = StartWithEmptyField();
+
+	for (int i = startField.m_row; i < c_number_of_rows; i++)
 	{
-		int j = (i == startField.Row()) ? startField.Col() : 0;
+		int j = (i == startField.m_row) ? startField.m_col : 0;
 		for (; j < c_number_of_cols; j++)
 		{
 			if (m_matrix[i][j] == 0)
 			{
-				int value = (i == startField.Row()) ? startValue : c_min_field_value;
+				int value = (i == startField.m_row) ? startValue : c_min_field_value;
 				for (; value <= c_max_field_value; value++)
 				{
 					if (IsCompatible(i, j, value))
 					{
-						field.SetField(i, j, value);
+						field.m_row = i;
+						field.m_col = j;
+						field.m_value = value;
 						return field;
 					}
 				}
@@ -105,13 +116,6 @@ SudokuField SudokuSolver::FindEmptyFieldAndGuessValue(SudokuField startField, in
 	return field;
 }
 
-void SudokuSolver::FillCheckArrays()
-{
-	memset(m_rows, false, c_number_of_rows * c_number_of_rows);
-	memset(m_cols, false, c_number_of_rows * c_number_of_rows);
-	memset(m_blocks, false, c_number_of_rows * c_number_of_rows);
-}
-
 bool SudokuSolver::IsCompatible(int row, int col, int value)
 {
 	return !CheckRow(row, value) && !CheckCol(col, value) && !CheckBlock(row, col, value);
@@ -119,17 +123,44 @@ bool SudokuSolver::IsCompatible(int row, int col, int value)
 
 bool SudokuSolver::CheckRow(int row, int value)
 {
-	return m_rows[row][value - 1];
+	for (int i = 0; i < c_number_of_rows; i++)
+	{
+		if (m_matrix[row][i] == value)
+		{
+			return true;
+		}
+	}
+	return false;
 }
 
 bool SudokuSolver::CheckCol(int col, int value)
 {
-	return m_cols[col][value - 1];
+	for (int i = 0; i < c_number_of_cols; i++)
+	{
+		if (m_matrix[i][col] == value)
+		{
+			return true;
+		}
+	}
+	return false;
 }
 
 bool SudokuSolver::CheckBlock(int row, int col, int value)
 {
-	return m_blocks[Block(row, col)][value - 1];
+	int block = Block(row, col);
+	int block_row = block / c_rows_of_blocks;
+	int block_col = block % c_cols_of_blocks;
+	for (int row = block_row * c_rows_of_blocks; row < (block_row + 1) * c_rows_of_blocks; row++)
+	{
+		for (int col = block_col * c_cols_of_blocks; col < (block_col + 1) * c_cols_of_blocks; col++)
+		{
+			if (m_matrix[row][col] == value)
+			{
+				return true;
+			}
+		}
+	}
+	return false;
 }
 
 bool SudokuSolver::IsSingular(int row, int col, int value)
@@ -200,36 +231,14 @@ bool SudokuSolver::IsUniqueSolution(int row, int col, int value)
 	return IsCompatible(row, col, value) && IsSingular(row, col, value);
 }
 
-void SudokuSolver::AssignCheckValues(int row, int col, int value)
-{
-	m_rows[row][value - 1] = true;
-	m_cols[col][value - 1] = true;
-	m_blocks[Block(row, col)][value - 1] = true;
-}
-
 void SudokuSolver::AssignFieldValue(int row, int col, int value)
 {
-	AssignCheckValues(row, col, value);
 	m_matrix[row][col] = value;
 }
 
 int SudokuSolver::Block(int row, int col)
 {
 	return (row / c_rows_of_blocks) * c_cols_of_blocks + col / c_cols_of_blocks;
-}
-
-void SudokuSolver::InitCheckArrays()
-{
-	for (int i = 0; i < c_number_of_rows; i++)
-	{
-		for (int j = 0; j < c_number_of_cols; j++)
-		{
-			if (m_matrix[i][j] != 0)
-			{
-				AssignCheckValues(i, j, m_matrix[i][j]);
-			}
-		}
-	}
 }
 
 bool SudokuSolver::CheckOutFields()
@@ -268,28 +277,30 @@ bool SudokuSolver::SolveStraightforward()
 
 bool SudokuSolver::SolveBacktrack()
 {
+	std::vector<Matrix> saved_matrixs;
+	std::vector<SudokuField> saved_fields;
 	SudokuField selected_field;
-	SudokuField start_field;
+	SudokuField start_field = StartWithEmptyField();
 
 	selected_field = FindEmptyFieldAndGuessValue(start_field, c_min_field_value);
-	while (!selected_field.IsEmpty())
+	while (!IsFieldEmpty(selected_field))
 	{
-		SaveField(selected_field);
-		SaveMatrix();
+		SaveField(selected_field, saved_fields);
+		SaveMatrix(m_matrix, saved_matrixs);
 		do
 		{
-			AssignFieldValue(selected_field.Row(), selected_field.Col(), selected_field.Value());
+			AssignFieldValue(selected_field.m_row, selected_field.m_col, selected_field.m_value);
 			if (SolveStraightforward())
 			{
 				return true;
 			}
 			selected_field = FindEmptyFieldAndGuessValue(selected_field, c_min_field_value);
-		} while (!selected_field.IsEmpty());
+		} while (!IsFieldEmpty(selected_field));
 
-		ResetMatrix();
-		ResetField(selected_field);
+		m_matrix = PopMatrix(saved_matrixs);
+		selected_field = PopField(saved_fields);
 
-		selected_field = FindEmptyFieldAndGuessValue(selected_field, selected_field.Value() + 1);
+		selected_field = FindEmptyFieldAndGuessValue(selected_field, selected_field.m_value + 1);
 	}
 
 	return false;

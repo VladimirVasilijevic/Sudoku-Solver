@@ -10,9 +10,9 @@ const string json = "D:\\projects\\sudoku\\MNIST\\mymodel-symbol.json";
 const string params = "D:\\projects\\sudoku\\MNIST\\mymodel-0100.params";
 
 SudokuPuzzle::SudokuPuzzle(std::string filename)
-	: m_squaresDetector(new SquaresDetection(filename))
-	, m_digit_teller(new DigitRecognition(json, params))
-	, m_solver(new SudokuSolver())
+	: m_squaresDetector(make_unique<SquaresDetection>(filename))
+	, m_digit_teller(make_unique<DigitRecognition>(json, params))
+	, m_solver(make_unique<SudokuSolver>())
 {
 	Matrix sudoku_matrix;
 	sudoku_matrix.resize(c_number_of_rows, vector<int>(c_number_of_cols));
