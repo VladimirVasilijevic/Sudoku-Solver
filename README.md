@@ -1,27 +1,30 @@
 Required tools:
 1. Python 2.7
-	Download and install [Python 2.7][python]
+	- Download and install [Python 2.7][python]
 	
 2. MXNET for python
-	Install MXNET for python:
-	Open command prompt and run
+	- Install MXNET for python:
+	- Open command prompt and run
 	```cmd
 	python -m pip install mxnet
 	```
 	If you don't have pip for python follow instractons [pip]
 	
 3. MXNET for Visual Studio 2015
-	Download and unzip mxnet_x64_vc14_cpu.7z [mxnet_vs14]
+	- Download and unzip mxnet_x64_vc14_cpu.7z [mxnet_vs14]
 	
 4. Visual Studio 2015
-	Download and install [Visual Studio 2015][vs]
+	- Download and install [Visual Studio 2015][vs]
 	
 5. OpenCV 3.1.0 for Visual Studio 2015
-	Download and install [OpenCV 3.1.0][opencv]
+	- Download and install [OpenCV 3.1.0][opencv]
 	
 Steps:
-1. Run Multilayer_Perceptron.py to download MNIST and train network
-
+1. Run MNIST\Multilayer_Perceptron.py to download MNIST and train network
+	- In folder MNIST open command promt and run:
+	```cmd
+	python Multilayer_Perceptron.py
+	```
 2. Link Visual Studio 2015 with OpenCV 3.1.0 and MXNET
 	- Go to project properties -> C/C++ -> General
 	- In Additional Include Directories add path to:
@@ -31,13 +34,13 @@ Steps:
 		opencv_world310d.lib and libmxnet.lib
 	- In Additional Library Dependencies add path to:
 		mxnet_x64_vc14_cpu\lib and opencv3.1.0\build\x64\vc14\lib
-	- In Environment Variables -> Path add to
+	- In Environment Variables -> Path add path to
 		mxnet_x64_vc14_cpu\build and opencv3.1.0\build\x64\vc14\bin
 		
 3. Run test_sudoku_puzzle
-
-Note:
-Change path to the test images in test main.cpp files
+	- Go to project properties -> Debugging
+	- In Command Arguments add path to the test image
+	- Run test_sudoku_puzzle
 
 Next:
 Improve digits recognition by adding digital numbers in training set
