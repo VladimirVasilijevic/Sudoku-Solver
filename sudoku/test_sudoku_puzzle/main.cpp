@@ -1,8 +1,11 @@
 #include "SudokuPuzzle.h"
+#include <string>
 
-int main()
+int main(int argc, char** argv)
 {
-	SudokuPuzzle puzzle("D:\\projects\\sudoku\\TestImages\\sudoku\\sudoku_test_0.png");
+	const std::string output(argv[1]);
+
+	SudokuPuzzle puzzle(output);
 	puzzle.WritePuzzle();
 	puzzle.Solve();
 	puzzle.WritePuzzle();
