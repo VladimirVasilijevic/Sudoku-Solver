@@ -1,4 +1,4 @@
-What Sudoku solver do:
+A brief description what Sudoku solver do:
 1) Automatic recognition of sudoku table and digits from digital image using machine learning (MXNET) and computer vision technologies (openCV)
 2) Automatic solving using backtrack algorithm
 
@@ -15,8 +15,8 @@ Required tools:
 	If you don't have pip for python follow instractons [pip]
 	
 3. MXNET for Visual Studio 2015
-	- Download and unzip [mxnet_x64_vc14_cpu.7z] [mxnet_vs14]
-	- Download [vc14 base package] [mxnet_vs14] and follow instractons
+	- Download and unzip [mxnet_x64_vc14_cpu.7z][mxnet_vs14]
+	- Download [vc14 base package][mxnet_vs14] and follow instractons
 	
 4. Visual Studio 2015
 	- Download and install [Visual Studio 2015][vs]
